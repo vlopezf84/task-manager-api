@@ -23,19 +23,12 @@ REST API built with .NET 8 and ASP.NET Core for managing tasks.
 
 
 \## Endpoints
-
 | Method | Route | Description |
-
 |--------|-------|-------------|
-
 | GET | /api/tasks | Get all tasks |
-
 | GET | /api/tasks/{id} | Get task by ID |
-
 | POST | /api/tasks | Create task |
-
 | PUT | /api/tasks/{id} | Update task |
-
 | DELETE | /api/tasks/{id} | Delete task |
 
 
