@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using TaskManagerAPI.Data;
 using TaskManagerAPI.DTOs;
 using TaskManagerAPI.Models;
 
@@ -8,13 +10,19 @@ namespace TaskManagerAPI.Controllers;
 [Route("api/[controller]")]
 public class TasksController : ControllerBase
 {
-    // Lista en memoria por ahora, la base de datos llega en la Semana 3
-    private static List<TaskItem> _tasks = new();
+    private readonly AppDbContext _context;
+
+    // El framework inyecta el AppDbContext aquí automáticamente
+    public TasksController(AppDbContext context)
+    {
+        _context = context;
+    }
 
     [HttpGet]
-    public ActionResult<IEnumerable<TaskResponseDto>> GetAll()
+    public async Task<ActionResult<IEnumerable<TaskResponseDto>>> GetAll()
     {
-        var response = _tasks.Select(t => new TaskResponseDto
+        var tasks = await _context.Tasks.ToListAsync();
+        var response = tasks.Select(t => new TaskResponseDto
         {
             Id = t.Id,
             Title = t.Title,
@@ -28,10 +36,11 @@ public class TasksController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    public ActionResult<TaskItem> GetById(int id)
+    public async Task<ActionResult<TaskResponseDto>> GetById(int id)
     {
-        var task = _tasks.FirstOrDefault(t => t.Id == id);
+        var task = await _context.Tasks.FindAsync(id);
         if (task is null) return NotFound();
+
         return Ok(new TaskResponseDto
         {
             Id = task.Id,
@@ -43,17 +52,16 @@ public class TasksController : ControllerBase
     }
 
     [HttpPost]
-    public ActionResult<TaskItem> Create(CreateTaskDto dto)
+    public async Task<ActionResult<TaskResponseDto>> Create(CreateTaskDto dto)
     {
         var task = new TaskItem
         {
-            Id = _tasks.Count + 1,
             Title = dto.Title,
             Description = dto.Description
-            // IsCompleted y CreatedAt tienen valores default en el modelo
         };
 
-        _tasks.Add(task);
+        _context.Tasks.Add(task);
+        await _context.SaveChangesAsync();
 
         var response = new TaskResponseDto
         {
@@ -63,30 +71,34 @@ public class TasksController : ControllerBase
             IsCompleted = task.IsCompleted,
             CreatedAt = task.CreatedAt
         };
-        return CreatedAtAction(nameof(GetById), new { id = task.Id }, response);
 
+        return CreatedAtAction(nameof(GetById), new { id = task.Id }, response);
     }
 
     [HttpPut("{id}")]
-    public IActionResult Update(int id, UpdateTaskDto dto)
+    public async Task<IActionResult> Update(int id, UpdateTaskDto dto)
     {
-        var task = _tasks.FirstOrDefault(t => t.Id == id);
+        var task = await _context.Tasks.FindAsync(id);
         if (task is null) return NotFound();
 
         task.Title = dto.Title;
         task.Description = dto.Description;
         task.IsCompleted = dto.IsCompleted;
 
+        await _context.SaveChangesAsync();
+
         return NoContent();
     }
 
     [HttpDelete("{id}")]
-    public IActionResult Delete(int id)
+    public async Task<IActionResult> Delete(int id)
     {
-        var task = _tasks.FirstOrDefault(t => t.Id == id);
+        var task = await _context.Tasks.FindAsync(id);
         if (task is null) return NotFound();
 
-        _tasks.Remove(task);
+        _context.Tasks.Remove(task);
+        await _context.SaveChangesAsync();
+
         return NoContent();
     }
 }
