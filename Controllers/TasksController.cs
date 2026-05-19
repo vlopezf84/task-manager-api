@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TaskManagerAPI.Data;
 using TaskManagerAPI.DTOs;
 using TaskManagerAPI.Models;
+using TaskManagerAPI.Repositories;
 
 namespace TaskManagerAPI.Controllers;
 
@@ -10,18 +11,19 @@ namespace TaskManagerAPI.Controllers;
 [Route("api/[controller]")]
 public class TasksController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly ITaskRepository _repository;
 
-    // El framework inyecta el AppDbContext aquí automáticamente
-    public TasksController(AppDbContext context)
+
+    public TasksController(ITaskRepository repository)
     {
-        _context = context;
+        _repository = repository;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TaskResponseDto>>> GetAll()
     {
-        var tasks = await _context.Tasks.ToListAsync();
+        var tasks = await _repository.GetAllAsync();
+
         var response = tasks.Select(t => new TaskResponseDto
         {
             Id = t.Id,
@@ -38,7 +40,7 @@ public class TasksController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TaskResponseDto>> GetById(int id)
     {
-        var task = await _context.Tasks.FindAsync(id);
+        var task = await _repository.GetByIdAsync(id);
         if (task is null) return NotFound();
 
         return Ok(new TaskResponseDto
@@ -60,8 +62,7 @@ public class TasksController : ControllerBase
             Description = dto.Description
         };
 
-        _context.Tasks.Add(task);
-        await _context.SaveChangesAsync();
+        await _repository.CreateAsync(task);
 
         var response = new TaskResponseDto
         {
@@ -78,14 +79,14 @@ public class TasksController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateTaskDto dto)
     {
-        var task = await _context.Tasks.FindAsync(id);
+        var task = await _repository.GetByIdAsync(id); 
         if (task is null) return NotFound();
 
         task.Title = dto.Title;
         task.Description = dto.Description;
         task.IsCompleted = dto.IsCompleted;
 
-        await _context.SaveChangesAsync();
+        await _repository.UpdateAsync(task);
 
         return NoContent();
     }
@@ -93,11 +94,11 @@ public class TasksController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var task = await _context.Tasks.FindAsync(id);
+        var task = await _repository.GetByIdAsync(id);
+
         if (task is null) return NotFound();
 
-        _context.Tasks.Remove(task);
-        await _context.SaveChangesAsync();
+        await _repository.DeleteAsync(task);
 
         return NoContent();
     }
