@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using TaskManagerAPI.Data;
 using TaskManagerAPI.DTOs;
+using TaskManagerAPI.Exceptions;
 using TaskManagerAPI.Models;
 using TaskManagerAPI.Repositories;
 
@@ -22,6 +23,7 @@ public class TasksController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TaskResponseDto>>> GetAll()
     {
+        throw new Exception("Error de prueba");
         var tasks = await _repository.GetAllAsync();
 
         var response = tasks.Select(t => new TaskResponseDto
@@ -41,7 +43,7 @@ public class TasksController : ControllerBase
     public async Task<ActionResult<TaskResponseDto>> GetById(int id)
     {
         var task = await _repository.GetByIdAsync(id);
-        if (task is null) return NotFound();
+        if (task is null) throw new NotFoundException(nameof(TaskItem), id);
 
         return Ok(new TaskResponseDto
         {
@@ -79,8 +81,8 @@ public class TasksController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateTaskDto dto)
     {
-        var task = await _repository.GetByIdAsync(id); 
-        if (task is null) return NotFound();
+        var task = await _repository.GetByIdAsync(id);
+        if (task is null) throw new NotFoundException(nameof(TaskItem), id);
 
         task.Title = dto.Title;
         task.Description = dto.Description;
@@ -96,7 +98,7 @@ public class TasksController : ControllerBase
     {
         var task = await _repository.GetByIdAsync(id);
 
-        if (task is null) return NotFound();
+        if (task is null) throw new NotFoundException(nameof(TaskItem), id);
 
         await _repository.DeleteAsync(task);
 

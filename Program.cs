@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using TaskManagerAPI.Data;
 using TaskManagerAPI.Repositories;
+using TaskManagerAPI.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 var app = builder.Build();
+app.UseMiddleware<ExceptionMiddleware>(); // <- Primera línea después de var app = builder.Build()
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
