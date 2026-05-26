@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TaskManagerAPI.Data;
 using TaskManagerAPI.DTOs;
@@ -10,6 +11,7 @@ namespace TaskManagerAPI.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize] // <- Todos los endpoints de este Controller requieren token válido
 public class TasksController : ControllerBase
 {
     private readonly ITaskRepository _repository;
@@ -23,7 +25,7 @@ public class TasksController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TaskResponseDto>>> GetAll()
     {
-        throw new Exception("Error de prueba");
+       // throw new Exception("Error de prueba");
         var tasks = await _repository.GetAllAsync();
 
         var response = tasks.Select(t => new TaskResponseDto
