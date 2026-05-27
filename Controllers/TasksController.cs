@@ -25,8 +25,9 @@ public class TasksController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TaskResponseDto>>> GetAll()
     {
-       // throw new Exception("Error de prueba");
-        var tasks = await _repository.GetAllAsync();
+        // throw new Exception("Error de prueba");
+        var userId = GetCurrentUserId();
+        var tasks = await _repository.GetAllAsync(userId);
 
         var response = tasks.Select(t => new TaskResponseDto
         {
@@ -44,7 +45,8 @@ public class TasksController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<TaskResponseDto>> GetById(int id)
     {
-        var task = await _repository.GetByIdAsync(id);
+        var userId = GetCurrentUserId();
+        var task = await _repository.GetByIdAsync(id, userId);
         if (task is null) throw new NotFoundException(nameof(TaskItem), id);
 
         return Ok(new TaskResponseDto
@@ -60,10 +62,13 @@ public class TasksController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<TaskResponseDto>> Create(CreateTaskDto dto)
     {
+        var userId = GetCurrentUserId();
+
         var task = new TaskItem
         {
             Title = dto.Title,
-            Description = dto.Description
+            Description = dto.Description,
+            UserId = userId
         };
 
         await _repository.CreateAsync(task);
@@ -83,7 +88,8 @@ public class TasksController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(int id, UpdateTaskDto dto)
     {
-        var task = await _repository.GetByIdAsync(id);
+        var userId = GetCurrentUserId();
+        var task = await _repository.GetByIdAsync(id, userId);
         if (task is null) throw new NotFoundException(nameof(TaskItem), id);
 
         task.Title = dto.Title;
@@ -91,19 +97,28 @@ public class TasksController : ControllerBase
         task.IsCompleted = dto.IsCompleted;
 
         await _repository.UpdateAsync(task);
-
         return NoContent();
     }
 
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var task = await _repository.GetByIdAsync(id);
-
+        var userId = GetCurrentUserId();
+        var task = await _repository.GetByIdAsync(id, userId);
         if (task is null) throw new NotFoundException(nameof(TaskItem), id);
 
         await _repository.DeleteAsync(task);
-
         return NoContent();
+    }
+
+    private int GetCurrentUserId()
+    {
+        var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)
+            ?? User.FindFirst("sub");
+
+        if (userIdClaim is null)
+            throw new UnauthorizedAccessException("User ID not found in token.");
+
+        return int.Parse(userIdClaim.Value);
     }
 }

@@ -12,14 +12,17 @@ namespace TaskManagerAPI.Repositories
             _context = context;
         }
 
-        public async Task<IEnumerable<TaskItem>> GetAllAsync()
+        public async Task<IEnumerable<TaskItem>> GetAllAsync(int userId)
         {
-            return await _context.Tasks.ToListAsync();
+            return await _context.Tasks
+                .Where(t => t.UserId == userId)
+                .ToListAsync();
         }
 
-        public async Task<TaskItem?> GetByIdAsync(int id)
+        public async Task<TaskItem?> GetByIdAsync(int id, int userId)
         {
-            return await _context.Tasks.FindAsync(id);
+            return await _context.Tasks
+                .FirstOrDefaultAsync(t => t.Id == id && t.UserId == userId);
         }
 
         public async Task<TaskItem> CreateAsync(TaskItem task)

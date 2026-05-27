@@ -7,5 +7,9 @@
         public string Description { get; set; } = string.Empty;
         public bool IsCompleted { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        // Relación con Usuario
+        public int UserId { get; set; }
+        public User? User { get; set; }
     }
 }
