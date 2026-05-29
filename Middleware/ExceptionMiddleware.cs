@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Text.Json;
-using TaskManagerAPI.Exceptions;
+using TaskManagerAPI.Application.Common;
+using TaskManagerAPI.Application.Exceptions;
 
 namespace TaskManagerAPI.Middleware;
 

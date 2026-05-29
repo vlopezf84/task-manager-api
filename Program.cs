@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
-using TaskManagerAPI.Data;
+using TaskManagerAPI.Infrastructure.Data;
 using TaskManagerAPI.Middleware;
-using TaskManagerAPI.Repositories;
-using TaskManagerAPI.Services;
+using TaskManagerAPI.Infrastructure.Repositories;
+using TaskManagerAPI.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using TaskManagerAPI.Application.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 

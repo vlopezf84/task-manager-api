@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using TaskManagerAPI.Data;
-using TaskManagerAPI.DTOs;
-using TaskManagerAPI.Exceptions;
-using TaskManagerAPI.Models;
-using TaskManagerAPI.Services;
+using TaskManagerAPI.Application.DTOs;
+using TaskManagerAPI.Application.Exceptions;
+using TaskManagerAPI.Application.Interfaces;
+using TaskManagerAPI.Domain.Models;
+using TaskManagerAPI.Infrastructure.Data;
 
 namespace TaskManagerAPI.Controllers;
 
