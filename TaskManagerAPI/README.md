@@ -5,8 +5,10 @@ REST API built with .NET 8 and ASP.NET Core for managing tasks.
 ## Tech Stack
 - .NET 8
 - ASP.NET Core Web API
-- SQL Server (coming soon)
-- Entity Framework Core (coming soon)
+- Entity Framework Core
+- SQL Server
+- JWT Authentication
+- Clean Architecture (Domain / Application / Infrastructure / API)
 - Docker (coming soon)
 - Azure (coming soon)
 
