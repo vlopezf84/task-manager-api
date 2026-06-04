@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Moq;
 using System.Security.Claims;
 using TaskManagerAPI.Application.DTOs;
+using TaskManagerAPI.Application.Exceptions;
 using TaskManagerAPI.Application.Interfaces;
 using TaskManagerAPI.Controllers;
 using TaskManagerAPI.Domain.Models;
@@ -34,8 +35,10 @@ public class TasksControllerTests
         };
     }
 
+    // ─── GetAll ───────────────────────────────────────────
+
     [Fact]
-    public async Task GetAll_ReturnsOkWithTasks_WhenTasksExist()
+    public async Task GetAll_ReturnsOk_WithListOfTasks()
     {
         // Arrange
         var fakeTasks = new List<TaskItem>
@@ -57,20 +60,58 @@ public class TasksControllerTests
     }
 
     [Fact]
-    public async Task GetById_ReturnsNotFound_WhenTaskDoesNotExist()
+    public async Task GetAll_ReturnsOk_WithEmptyList_WhenNoTasksExist()
+    {
+        // Arrange
+        _mockRepo.Setup(r => r.GetAllAsync(UserId))
+                 .ReturnsAsync(new List<TaskItem>());
+
+        // Act
+        var result = await _controller.GetAll();
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var tasks = Assert.IsAssignableFrom<IEnumerable<TaskResponseDto>>(okResult.Value);
+        Assert.Empty(tasks);
+    }
+
+    // ─── GetById ──────────────────────────────────────────
+
+    [Fact]
+    public async Task GetById_ReturnsOk_WhenTaskExists()
+    {
+        // Arrange
+        var fakeTask = new TaskItem { Id = 1, Title = "Task 1", UserId = UserId };
+
+        _mockRepo.Setup(r => r.GetByIdAsync(1, UserId))
+                 .ReturnsAsync(fakeTask);
+
+        // Act
+        var result = await _controller.GetById(1);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result.Result);
+        var response = Assert.IsType<TaskResponseDto>(okResult.Value);
+        Assert.Equal("Task 1", response.Title);
+    }
+
+    [Fact]
+    public async Task GetById_ThrowsNotFoundException_WhenTaskDoesNotExist()
     {
         // Arrange
         _mockRepo.Setup(r => r.GetByIdAsync(999, UserId))
                  .ReturnsAsync((TaskItem?)null);
 
         // Act & Assert
-        await Assert.ThrowsAsync<TaskManagerAPI.Application.Exceptions.NotFoundException>(
+        await Assert.ThrowsAsync<NotFoundException>(
             () => _controller.GetById(999)
         );
     }
 
+    // ─── Create ───────────────────────────────────────────
+
     [Fact]
-    public async Task Create_ReturnsCreatedResult_WithCorrectData()
+    public async Task Create_ReturnsCreated_WithCorrectData()
     {
         // Arrange
         var dto = new CreateTaskDto
@@ -93,8 +134,46 @@ public class TasksControllerTests
         var createdResult = Assert.IsType<CreatedAtActionResult>(result.Result);
         var response = Assert.IsType<TaskResponseDto>(createdResult.Value);
         Assert.Equal("Nueva tarea", response.Title);
-        Assert.Equal(UserId, response.Id == 0 ? UserId : UserId);
     }
+
+    // ─── Update ───────────────────────────────────────────
+
+    [Fact]
+    public async Task Update_ReturnsNoContent_WhenTaskExists()
+    {
+        // Arrange
+        var fakeTask = new TaskItem { Id = 1, Title = "Task", UserId = UserId };
+        var dto = new UpdateTaskDto { Title = "Actualizada", Description = "Nueva desc", IsCompleted = true };
+
+        _mockRepo.Setup(r => r.GetByIdAsync(1, UserId))
+                 .ReturnsAsync(fakeTask);
+
+        _mockRepo.Setup(r => r.UpdateAsync(fakeTask))
+                 .Returns(Task.CompletedTask);
+
+        // Act
+        var result = await _controller.Update(1, dto);
+
+        // Assert
+        Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task Update_ThrowsNotFoundException_WhenTaskDoesNotExist()
+    {
+        // Arrange
+        _mockRepo.Setup(r => r.GetByIdAsync(999, UserId))
+                 .ReturnsAsync((TaskItem?)null);
+
+        var dto = new UpdateTaskDto { Title = "X", Description = "Y", IsCompleted = false };
+
+        // Act & Assert
+        await Assert.ThrowsAsync<NotFoundException>(
+            () => _controller.Update(999, dto)
+        );
+    }
+
+    // ─── Delete ───────────────────────────────────────────
 
     [Fact]
     public async Task Delete_ReturnsNoContent_WhenTaskExists()
@@ -113,5 +192,18 @@ public class TasksControllerTests
 
         // Assert
         Assert.IsType<NoContentResult>(result);
+    }
+
+    [Fact]
+    public async Task Delete_ThrowsNotFoundException_WhenTaskDoesNotExist()
+    {
+        // Arrange
+        _mockRepo.Setup(r => r.GetByIdAsync(999, UserId))
+                 .ReturnsAsync((TaskItem?)null);
+
+        // Act & Assert
+        await Assert.ThrowsAsync<NotFoundException>(
+            () => _controller.Delete(999)
+        );
     }
 }

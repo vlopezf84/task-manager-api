@@ -10,7 +10,6 @@ public class TokenServiceTests
 
     public TokenServiceTests()
     {
-        // Simula la configuración sin necesitar appsettings.json real
         var inMemoryConfig = new Dictionary<string, string?>
         {
             { "JwtSettings:SecretKey", "test-secret-key-minimo-32-caracteres-aqui" },
