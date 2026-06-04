@@ -8,9 +8,12 @@ REST API built with .NET 8 and ASP.NET Core for managing tasks.
 - Entity Framework Core
 - SQL Server
 - JWT Authentication
+- BCrypt password hashing
 - Clean Architecture (Domain / Application / Infrastructure / API)
+- xUnit + Moq (unit testing)
 - Docker (coming soon)
 - Azure (coming soon)
+- CI/CD GitHub Actions (coming soon)
 
 ## Endpoints
 | Method | Route | Description |
