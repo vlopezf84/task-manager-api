@@ -4,3 +4,7 @@
 **/obj
 **/*.user
 **/node_modules
+
+# Secrets
+.env
+.env.*

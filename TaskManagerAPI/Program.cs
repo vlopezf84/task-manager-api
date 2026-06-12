@@ -68,7 +68,28 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey))
     };
 });
+
+
 var app = builder.Build();
+using (var scope = app.Services.CreateScope())
+{
+    var retries = 5;
+    while (retries > 0)
+    {
+        try
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            db.Database.Migrate();
+            break;
+        }
+        catch (Exception)
+        {
+            retries--;
+            if (retries == 0) throw;
+            Thread.Sleep(5000); // espera 5 segundos antes de reintentar
+        }
+    }
+}
 app.UseMiddleware<ExceptionMiddleware>(); // <- Primera línea después de var app = builder.Build()
 
 // Configure the HTTP request pipeline.
