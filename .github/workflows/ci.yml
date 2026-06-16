@@ -1,0 +1,36 @@
+name: CI Pipeline
+
+# Trigger: corre en cada push o pull request a main
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest  # Corre en una VM de Ubuntu en GitHub
+
+    steps:
+      # Paso 1 - Descarga el código del repositorio
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Paso 2 - Instala .NET 8 en la VM
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      # Paso 3 - Restaura los paquetes NuGet
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # Paso 4 - Compila la solución completa
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      # Paso 5 - Corre todos los tests
+      - name: Run tests
+        run: dotnet test --no-build --configuration Release --verbosity normal
