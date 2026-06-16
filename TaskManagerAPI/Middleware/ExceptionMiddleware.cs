@@ -30,7 +30,7 @@ public class ExceptionMiddleware
         catch (Exception ex)
         {
             // Si algo explota, lo interceptamos aquí
-            _logger.LogError(ex, "Unhandled exception occurred");
+            _logger.LogError(ex, "Unhandled exception occurred. Path: {Path}", context.Request.Path);
             await HandleExceptionAsync(context, ex);
         }
     }

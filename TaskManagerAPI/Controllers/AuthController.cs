@@ -15,12 +15,14 @@ public class AuthController : ControllerBase
     private readonly AppDbContext _context;
     private readonly ITokenService _tokenService;
     private readonly IConfiguration _configuration;
-
-    public AuthController(AppDbContext context, ITokenService tokenService, IConfiguration configuration)
+    private readonly ILogger<AuthController> _logger;
+    public AuthController(AppDbContext context, ITokenService tokenService, 
+        IConfiguration configuration, ILogger<AuthController> logger)
     {
         _context = context;
         _tokenService = tokenService;
         _configuration = configuration;
+        _logger = logger;
     }
 
     [HttpPost("register")]
@@ -31,7 +33,10 @@ public class AuthController : ControllerBase
             .FirstOrDefaultAsync(u => u.Email == dto.Email);
 
         if (existingUser is not null)
+        {
+            _logger.LogWarning("Registration attempt with existing email: {Email}", dto.Email);
             throw new BadRequestException("Email is already registered.");
+        }
 
         // Hashear la contraseña — nunca guardar texto plano
         var passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
@@ -49,6 +54,7 @@ public class AuthController : ControllerBase
         var token = _tokenService.GenerateToken(user);
         var expirationHours = int.Parse(_configuration["JwtSettings:ExpirationHours"]!);
 
+        _logger.LogInformation("New user registered: {Email}", dto.Email);
         return Ok(new AuthResponseDto
         {
             Token = token,
@@ -65,11 +71,16 @@ public class AuthController : ControllerBase
             .FirstOrDefaultAsync(u => u.Email == dto.Email);
 
         if (user is null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+        {
+            _logger.LogWarning("Failed login attempt for email: {Email}", dto.Email);
             throw new BadRequestException("Invalid email or password.");
+        }
+
 
         var token = _tokenService.GenerateToken(user);
         var expirationHours = int.Parse(_configuration["JwtSettings:ExpirationHours"]!);
 
+        _logger.LogInformation("User logged in: {Email}", dto.Email);
         return Ok(new AuthResponseDto
         {
             Token = token,
