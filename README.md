@@ -1,3 +1,5 @@
+![CI Pipeline](https://github.com/vlopezf84/task-manager-api/actions/workflows/ci.yml/badge.svg)
+
 # Task Manager API
 
 REST API built with .NET 8 and ASP.NET Core for managing tasks.
