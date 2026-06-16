@@ -23,7 +23,7 @@ public class TasksController : ControllerBase
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<TaskResponseDto>>> GetAll()
-    {
+    { NO COMPILA
         // throw new Exception("Error de prueba");
         var userId = GetCurrentUserId();
         var tasks = await _repository.GetAllAsync(userId);
