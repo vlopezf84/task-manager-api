@@ -38,8 +38,21 @@ var secretKey = jwtSettings["SecretKey"]!;
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen(options =>
 {
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Task Manager API",
+        Version = "v1",
+        Description = "REST API for task management with JWT authentication, built with .NET 8 and Clean Architecture.",
+        Contact = new Microsoft.OpenApi.Models.OpenApiContact
+        {
+            Name = "Victor Lopez",
+            Email = "victor@gmail.com"
+        }
+    });
+
     options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
         Name = "Authorization",
@@ -47,7 +60,7 @@ builder.Services.AddSwaggerGen(options =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Enter your JWT token here"
+        Description = "Enter your JWT token here. Example: eyJhbGci..."
     });
 
     options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
@@ -64,12 +77,21 @@ builder.Services.AddSwaggerGen(options =>
             Array.Empty<string>()
         }
     });
+
+    // Incluye los comentarios XML en Swagger
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+        options.IncludeXmlComments(xmlPath);
 });
+
+
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddScoped<ITaskRepository, TaskRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<AppDbContext>(name: "database");
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -129,6 +151,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseAuthentication(); // <- Primero: identifica quién es
 app.UseAuthorization();  // <- Segundo: decide qué puede hacer
+app.MapHealthChecks("/health");
 app.MapControllers();
 
 

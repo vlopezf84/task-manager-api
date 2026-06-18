@@ -25,7 +25,15 @@ public class AuthController : ControllerBase
         _logger = logger;
     }
 
+    /// <summary>
+    /// Registers a new user account.
+    /// </summary>
+    /// <param name="dto">Registration data.</param>
+    /// <response code="200">User registered successfully. Returns JWT token.</response>
+    /// <response code="400">Email already registered or invalid data.</response>
     [HttpPost("register")]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<AuthResponseDto>> Register(RegisterDto dto)
     {
         // Verificar que el email no esté registrado
@@ -64,7 +72,15 @@ public class AuthController : ControllerBase
         });
     }
 
+    /// <summary>
+    /// Authenticates a user and returns a JWT token.
+    /// </summary>
+    /// <param name="dto">Login credentials.</param>
+    /// <response code="200">Login successful. Returns JWT token.</response>
+    /// <response code="400">Invalid email or password.</response>
     [HttpPost("login")]
+    [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<AuthResponseDto>> Login(LoginDto dto)
     {
         var user = await _context.Users
